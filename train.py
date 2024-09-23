@@ -7,8 +7,8 @@ import math
 X_train = np.array(pd.read_csv("data.csv",usecols=["launch_speed", 'launch_angle']))
 y_train = np.array(pd.read_csv("data.csv",usecols=["hit"]))
 
-print(X_train)
-print(y_train)
+working_w = np.zeros(X_train.shape[1])
+working_b = 0
 
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
