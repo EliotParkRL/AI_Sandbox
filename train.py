@@ -143,3 +143,47 @@ alpha = 0.001
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
                                     alpha, iterations)
+
+def predict(X, w, b):
+    """
+    Predict whether the label is 0 or 1 using learned logistic regression parameters w and b.
+
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      w : (ndarray Shape (n,))  learned values of parameters of the model
+      b : (scalar)              learned value of bias parameter of the model
+
+    Returns:
+      predictions : (ndarray Shape (m,)) predicted labels (0 or 1)
+    """
+    m = X.shape[0]
+    predictions = np.zeros(m)
+
+    for i in range(m):
+        z = np.dot(X[i], w) + b
+        predictions[i] = sigmoid(z) >= 0.5  # Threshold at 0.5 for binary classification
+
+    return predictions
+
+
+def compute_accuracy(X, y, w, b):
+    """
+    Compute the accuracy of the model given data X, true labels y, and model parameters w and b.
+
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      y : (ndarray Shape (m,))  true labels
+      w : (ndarray Shape (n,))  learned parameters of the model
+      b : (scalar)              learned bias parameter of the model
+
+    Returns:
+      accuracy : (float) accuracy percentage
+    """
+    predictions = predict(X, w, b)
+    accuracy = np.mean(predictions == y) * 100  # Convert to percentage
+    return accuracy
+
+
+# Compute accuracy after training
+accuracy = compute_accuracy(X_train, y_train, w, b)
+print(f"\n=== Model Accuracy ===\n{accuracy:.2f}%")
