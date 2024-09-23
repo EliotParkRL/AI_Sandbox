@@ -6,10 +6,8 @@ import math
 X_train = np.array(pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']))
 y_train = np.array(pd.read_csv("data.csv", usecols=["hit"]))
 
-# Print formatted output with headers
-print("=== X_train (Launch Speed and Launch Angle) ===")
-X_df = pd.DataFrame(X_train, columns=["Launch Speed", "Launch Angle"])
-print(X_df)
+working_w = np.zeros(X_train.shape[1])
+working_b = 0
 
 print("\n=== y_train (Hit Values) ===")
 y_df = pd.DataFrame(y_train, columns=["Hit"])
