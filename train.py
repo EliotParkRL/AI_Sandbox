@@ -3,8 +3,8 @@ import numpy as np
 import math
 
 # Load the data
-X_train = np.array(pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']))
-y_train = np.array(pd.read_csv("data.csv", usecols=["hit"]))
+X_train = np.array(pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0))
+y_train = np.array(pd.read_csv("data.csv", usecols=["hit"]).fillna(0))
 
 # Print formatted output with headers
 print("=== X_train (Launch Speed and Launch Angle) ===")
@@ -17,7 +17,7 @@ print(y_df)
 
 # Sigmoid function
 def sigmoid(x):
-    return 1 / (1 + math.exp(-x))
+    return 1 / (1 + np.exp(-x))
 
 # Cost computation function
 def compute_cost(X, y, w, b):
@@ -71,7 +71,7 @@ def compute_gradient_logistic(X, y, w, b):
 
     return dj_db, dj_dw
 
-def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, num_iters, lambda_):
+def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, num_iters):
     """
     Performs batch gradient descent to learn theta. Updates theta by taking
     num_iters gradient steps with learning rate alpha
@@ -104,7 +104,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
     for i in range(num_iters):
 
         # Calculate the gradient and update the parameters
-        dj_db, dj_dw = gradient_function(X, y, w_in, b_in, lambda_)
+        dj_db, dj_dw = gradient_function(X, y, w_in, b_in)
 
         # Update Parameters using w, b, alpha and gradient
         w_in = w_in - alpha * dj_dw
@@ -112,7 +112,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
 
         # Save cost J at each iteration
         if i < 100000:  # prevent resource exhaustion
-            cost = cost_function(X, y, w_in, b_in, lambda_)
+            cost = cost_function(X, y, w_in, b_in)
             J_history.append(cost)
 
         # Print cost every at intervals 10 times or as many iterations if < 10
@@ -128,3 +128,18 @@ b = 0  # Initialize b as zero
 cost = compute_cost(X_train, y_train, w, b)
 print("\n=== Computed Cost ===")
 print(cost)
+
+np.random.seed(1)
+initial_w = np.random.rand(X_train.shape[1])-0.5
+initial_b = 1.
+
+# Set regularization parameter lambda_ (you can try varying this)
+lambda_ = 0.000001
+
+# Some gradient descent settings
+iterations = 10
+alpha = 0.001
+
+w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
+                                    compute_cost, compute_gradient_logistic,
+                                    alpha, iterations)
