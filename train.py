@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 import math
+import itertools
 
 # Load the data
-X_train = np.array(pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0))
+X_train = pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0)
 y_train = np.array(pd.read_csv("data.csv", usecols=["hit"]).fillna(0))
 
-# Print formatted output with headers
 print("=== X_train (Launch Speed and Launch Angle) ===")
 X_df = pd.DataFrame(X_train, columns=["Launch Speed", "Launch Angle"])
 print(X_df)
@@ -15,12 +15,40 @@ print("\n=== y_train (Hit Values) ===")
 y_df = pd.DataFrame(y_train, columns=["Hit"])
 print(y_df)
 
+def add_full_polynomial_features(df, feature_columns, degree=3):
+    """
+    Expands the dataset by adding polynomial features up to the specified degree,
+    including all possible combinations of the features raised to different powers.
+
+    Args:
+    df (pd.DataFrame): The original dataset.
+    feature_columns (list): List of column names (features) to expand.
+    degree (int): The degree of the polynomial features to generate (default is 3 for cubic).
+
+    Returns:
+    pd.DataFrame: Dataset with the original and new polynomial features.
+    """
+    df_poly = df.copy()
+
+    # Add polynomial terms for each feature (including interactions up to the specified degree)
+    for d in range(2, degree + 1):
+        for powers in itertools.combinations_with_replacement(feature_columns, d):
+            # Create a column name with the features raised to powers
+            col_name = '*'.join([f"{col}^{powers.count(col)}" for col in feature_columns])
+            df_poly[col_name] = df[list(powers)].prod(axis=1)
+
+    return df_poly
+
+X_train = add_full_polynomial_features(X_train, ['launch_speed', 'launch_angle'])
+
+X_train = np.array((X_train - X_train.mean()) / X_train.std())
+
 # Sigmoid function
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 # Cost computation function
-def compute_cost(X, y, w, b):
+def compute_cost(X, y, w, b, lam):
     """
     Computes the cost over all examples
     Args:
@@ -31,19 +59,22 @@ def compute_cost(X, y, w, b):
     Returns:
       total_cost : (scalar) cost
     """
-    
     m, n = X.shape
     total_cost = 0
+    regular_addition = 0
     for i in range(m):
         temp = np.dot(w, X[i]) + b
         cost = -y[i] * np.log(sigmoid(temp)) - ((1 - y[i]) * np.log(1 - sigmoid(temp)))
         total_cost += cost
+    for i in range(len(w)):
+        regular_addition += w[i] ** 2
     total_cost = total_cost / m
-
+    regular_addition *= lam/(2 * m)
+    total_cost += regular_addition
     return total_cost
 
 
-def compute_gradient_logistic(X, y, w, b):
+def compute_gradient_logistic(X, y, w, b, lam):
     """
     Computes the gradient for logistic regression
 
@@ -68,10 +99,11 @@ def compute_gradient_logistic(X, y, w, b):
         dj_db = dj_db + err_i
     dj_dw = dj_dw / m  # (n,)
     dj_db = dj_db / m  # scalar
+    dj_dw += (lam / m) * w
 
     return dj_db, dj_dw
 
-def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, num_iters):
+def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, num_iters, lam):
     """
     Performs batch gradient descent to learn theta. Updates theta by taking
     num_iters gradient steps with learning rate alpha
@@ -104,7 +136,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
     for i in range(num_iters):
 
         # Calculate the gradient and update the parameters
-        dj_db, dj_dw = gradient_function(X, y, w_in, b_in)
+        dj_db, dj_dw = gradient_function(X, y, w_in, b_in, lam)
 
         # Update Parameters using w, b, alpha and gradient
         w_in = w_in - alpha * dj_dw
@@ -112,7 +144,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
 
         # Save cost J at each iteration
         if i < 100000:  # prevent resource exhaustion
-            cost = cost_function(X, y, w_in, b_in)
+            cost = cost_function(X, y, w_in, b_in, lam)
             J_history.append(cost)
 
         # Print cost every at intervals 10 times or as many iterations if < 10
@@ -125,7 +157,9 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
 # Example of how to use compute_cost (you would need to initialize w and b)
 w = np.zeros(X_train.shape[1])  # Initialize w with zeros
 b = 0  # Initialize b as zero
-cost = compute_cost(X_train, y_train, w, b)
+lambda_ = 1
+
+cost = compute_cost(X_train, y_train, w, b, lambda_)
 print("\n=== Computed Cost ===")
 print(cost)
 
@@ -133,19 +167,13 @@ np.random.seed(1)
 initial_w = np.random.rand(X_train.shape[1])-0.5
 initial_b = 1.
 
-# Set regularization parameter lambda_ (you can try varying this)
-lambda_ = 0.000001
-
 # Some gradient descent settings
 iterations = 10
-alpha = 0.001
-
-x = X_train
-X_train_4D = (X_train, X_train**2, X_train**3, X_train**4)
+alpha = 3
 
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
-                                    alpha, iterations)
+                                    alpha, iterations, lambda_)
 
 def predict(X, w, b):
     """
