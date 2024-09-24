@@ -6,6 +6,12 @@ import math
 X_train = np.array(pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0))
 y_train = np.array(pd.read_csv("data.csv", usecols=["hit"]).fillna(0))
 
+mean = np.mean(X_train, axis=0)  # Mean along columns
+std = np.std(X_train, axis=0)    # Standard deviation along columns
+
+# Normalize the dataset
+X_train = (X_train - mean) / std
+
 # Print formatted output with headers
 print("=== X_train (Launch Speed and Launch Angle) ===")
 X_df = pd.DataFrame(X_train, columns=["Launch Speed", "Launch Angle"])
@@ -20,7 +26,7 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 # Cost computation function
-def compute_cost(X, y, w, b):
+def compute_cost(X, y, w, b, lam):
     """
     Computes the cost over all examples
     Args:
@@ -34,16 +40,20 @@ def compute_cost(X, y, w, b):
     
     m, n = X.shape
     total_cost = 0
+    regular_addition = 0
     for i in range(m):
         temp = np.dot(w, X[i]) + b
         cost = -y[i] * np.log(sigmoid(temp)) - ((1 - y[i]) * np.log(1 - sigmoid(temp)))
         total_cost += cost
+    for i in range(len(w)):
+        regular_addition += w[i] ** 2
     total_cost = total_cost / m
-
+    regular_addition *= lam/(2 * m)
+    total_cost += regular_addition
     return total_cost
 
 
-def compute_gradient_logistic(X, y, w, b):
+def compute_gradient_logistic(X, y, w, b, lam):
     """
     Computes the gradient for logistic regression
 
@@ -68,10 +78,12 @@ def compute_gradient_logistic(X, y, w, b):
         dj_db = dj_db + err_i
     dj_dw = dj_dw / m  # (n,)
     dj_db = dj_db / m  # scalar
+    # for i in range(n):
+    #     dj_dw[i] = dj_dw[i] + (lam/m) * w[i]
 
     return dj_db, dj_dw
 
-def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, num_iters):
+def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, num_iters, lam):
     """
     Performs batch gradient descent to learn theta. Updates theta by taking
     num_iters gradient steps with learning rate alpha
@@ -104,7 +116,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
     for i in range(num_iters):
 
         # Calculate the gradient and update the parameters
-        dj_db, dj_dw = gradient_function(X, y, w_in, b_in)
+        dj_db, dj_dw = gradient_function(X, y, w_in, b_in, lam)
 
         # Update Parameters using w, b, alpha and gradient
         w_in = w_in - alpha * dj_dw
@@ -112,7 +124,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
 
         # Save cost J at each iteration
         if i < 100000:  # prevent resource exhaustion
-            cost = cost_function(X, y, w_in, b_in)
+            cost = cost_function(X, y, w_in, b_in, lam)
             J_history.append(cost)
 
         # Print cost every at intervals 10 times or as many iterations if < 10
@@ -125,7 +137,8 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
 # Example of how to use compute_cost (you would need to initialize w and b)
 w = np.zeros(X_train.shape[1])  # Initialize w with zeros
 b = 0  # Initialize b as zero
-cost = compute_cost(X_train, y_train, w, b)
+lambda_ = 0.1
+cost = compute_cost(X_train, y_train, w, b, lambda_)
 print("\n=== Computed Cost ===")
 print(cost)
 
@@ -133,16 +146,13 @@ np.random.seed(1)
 initial_w = np.random.rand(X_train.shape[1])-0.5
 initial_b = 1.
 
-# Set regularization parameter lambda_ (you can try varying this)
-lambda_ = 0.000001
-
 # Some gradient descent settings
-iterations = 10
-alpha = 0.001
+iterations = 100
+alpha = 0.1
 
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
-                                    alpha, iterations)
+                                    alpha, iterations, lambda_)
 
 def predict(X, w, b):
     """
