@@ -94,8 +94,7 @@ def compute_gradient_logistic(X, y, w, b, lam):
     for i in range(m):
         f_wb_i = sigmoid(np.dot(X[i], w) + b)  # (n,)(n,)=scalar
         err_i = f_wb_i - y[i]  # scalar
-        for j in range(n):
-            dj_dw[j] = dj_dw[j] + err_i * X[i, j]  # scalar
+        dj_dw = dj_dw + err_i * X[i]
         dj_db = dj_db + err_i
     dj_dw = dj_dw / m  # (n,)
     dj_db = dj_db / m  # scalar
@@ -150,7 +149,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
         # Print cost every at intervals 10 times or as many iterations if < 10
         if i % math.ceil(num_iters / 10) == 0 or i == (num_iters - 1):
             w_history.append(w_in)
-            print(f"Iteration {i:4}: Cost {float(J_history[-1]):8.2f}   ")
+            print("Iteration:    " + str(i) + ". Cost:   " + str(J_history[-1]))
 
     return w_in, b_in, J_history, w_history  # return w and J,w history for graphing
 
@@ -259,7 +258,7 @@ plt.title("Scatter Plot of Predicted Hits with Color Map Based on Predicted Hit 
 plt.xlabel("Launch Speed")
 plt.ylabel("Launch Angle")
 plt.show()
-#
+
 #
 # # Assuming you've already trained the model and have w and b
 # y_predictions = predict(X_train, w, b)  # Predicted values for X_train
