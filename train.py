@@ -3,6 +3,7 @@ import numpy as np
 import math
 import itertools
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Load the data
 X_train = pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0)
@@ -16,7 +17,7 @@ print("\n=== y_train (Hit Values) ===")
 y_df = pd.DataFrame(y_train, columns=["Hit"])
 print(y_df)
 
-def add_full_polynomial_features(df, feature_columns, degree=8):
+def add_full_polynomial_features(df, feature_columns, degree=10):
     """
     Expands the dataset by adding polynomial features up to the specified degree,
     including all possible combinations of the features raised to different powers.
@@ -168,8 +169,8 @@ initial_w = np.random.rand(X_train.shape[1])-0.5
 initial_b = 1.
 
 # Some gradient descent settings
-iterations = 30
-alpha = 0.5
+iterations = 10
+alpha = 1
 
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
@@ -231,7 +232,7 @@ def predict_values(X, w, b):
 
     for i in range(m):
         z = np.dot(X[i], w) + b
-        predictions[i] = sigmoid(z)  # Threshold at 0.5 for binary classification
+        predictions[i] = sigmoid(z) >= 0.5  # Threshold at 0.5 for binary classification
 
     return predictions
 
@@ -239,21 +240,19 @@ def predict_values(X, w, b):
 accuracy = compute_accuracy(X_train, y_train, w, b)
 print(f"\n=== Model Accuracy ===\n{accuracy:.2f}%")
 
-y_predictions = predict_values(X_train, w, b)  # Predicted values for X_train
+y_predictions = predict(X_train, w, b)  # Predicted values for X_train
 
 # color = dict(np.linspace(0, 1, 101), plt.cm.tab20(np.linspace(0, 1, 101)))
 
 # Prepare data for scatter heatmap plotting
 X_train_df = pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0)
 X_train_df['Predicted Hit'] = y_predictions  # Add the predicted hit values
-X_train_df['Predicted Hit'] = X_train_df['Predicted Hit'].round(2)
+# X_train_df['Predicted Hit'] = X_train_df['Predicted Hit'].round(2)
 
 # Create a scatter plot with color based on 'Predicted Hit'
 plt.figure(figsize=(10, 8))
-sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'], c=X_train_df['Predicted Hit'], cmap='viridis', s = 10)
-
-plt.colorbar(label='Color Value')
-
+sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'])
+s
 # Titles and labels
 plt.title("Scatter Plot of Predicted Hits with Color Map Based on Predicted Hit Values")
 plt.xlabel("Launch Speed")
