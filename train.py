@@ -169,7 +169,7 @@ initial_b = 1.
 
 # Some gradient descent settings
 iterations = 10
-alpha = 1
+alpha = 0.3
 
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
@@ -255,7 +255,8 @@ X_train_df['Predicted Hit'] = y_predictions  # Add the predicted hit values
 
 # Create a scatter plot with color based on 'Predicted Hit'
 plt.figure(figsize=(10, 8))
-sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'])
+sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'], c=X_train_df['Predicted Hit'], cmap='viridis', s = 10)
+plt.colorbar(label='Color Value')
 
 # Titles and labels
 plt.title("Scatter Plot of Predicted Hits with Color Map Based on Predicted Hit Values")
