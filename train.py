@@ -187,12 +187,13 @@ def predict(X, w, b):
     Returns:
       predictions : (ndarray Shape (m,)) predicted labels (0 or 1)
     """
-    m = X.shape[0]
-    predictions = np.zeros(m)
+    z = np.dot(X, w) + b
 
-    for i in range(m):
-        z = np.dot(X[i], w) + b
-        predictions[i] = sigmoid(z) >= 0.5  # Threshold at 0.5 for binary classification
+    # Apply the sigmoid function
+    sigmoid_vals = sigmoid(z)
+
+    # Predict labels: if sigmoid value >= 0.5, predict 1; otherwise, predict 0
+    predictions = (sigmoid_vals >= 0.5)
 
     return predictions
 
@@ -214,6 +215,7 @@ def compute_accuracy(X, y, w, b):
     accuracy = np.mean(predictions == y) * 100  # Convert to percentage
     return accuracy
 
+
 def predict_values(X, w, b):
     """
     Predict whether the label is 0 or 1 using learned logistic regression parameters w and b.
@@ -226,20 +228,23 @@ def predict_values(X, w, b):
     Returns:
       predictions : (ndarray Shape (m,)) predicted labels (0 or 1)
     """
-    m = X.shape[0]
-    predictions = np.zeros(m)
+    # Compute the linear combination of inputs and weights
+    z = np.dot(X, w) + b
 
-    for i in range(m):
-        z = np.dot(X[i], w) + b
-        predictions[i] = sigmoid(z) >= 0.5  # Threshold at 0.5 for binary classification
+    # Apply the sigmoid function
+    sigmoid_vals = sigmoid(z)
+
+    # Predict labels: if sigmoid value >= 0.5, predict 1; otherwise, predict 0
+    predictions = sigmoid_vals
 
     return predictions
+
 
 # Compute accuracy after training
 accuracy = compute_accuracy(X_train, y_train, w, b)
 print(f"\n=== Model Accuracy ===\n{accuracy:.2f}%")
 
-y_predictions = predict(X_train, w, b)  # Predicted values for X_train
+y_predictions = predict_values(X_train, w, b)  # Predicted values for X_train
 
 # color = dict(np.linspace(0, 1, 101), plt.cm.tab20(np.linspace(0, 1, 101)))
 
@@ -251,7 +256,7 @@ X_train_df['Predicted Hit'] = y_predictions  # Add the predicted hit values
 # Create a scatter plot with color based on 'Predicted Hit'
 plt.figure(figsize=(10, 8))
 sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'])
-s
+
 # Titles and labels
 plt.title("Scatter Plot of Predicted Hits with Color Map Based on Predicted Hit Values")
 plt.xlabel("Launch Speed")
