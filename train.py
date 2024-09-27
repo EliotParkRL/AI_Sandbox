@@ -3,7 +3,7 @@ import numpy as np
 import math
 import itertools
 import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.preprocessing import PolynomialFeatures
 
 # Load the data
 X_train = pd.read_csv("data.csv", usecols=["launch_speed", 'launch_angle']).fillna(0)
@@ -41,7 +41,9 @@ def add_full_polynomial_features(df, feature_columns, degree=10):
 
     return df_poly
 
-X_train = add_full_polynomial_features(X_train, ['launch_speed', 'launch_angle'])
+# X_train = add_full_polynomial_features(X_train, ['launch_speed', 'launch_angle'])
+poly = PolynomialFeatures(10)
+X_train = poly.fit_transform(X_train)
 X_train = np.array((X_train - X_train.mean()) / X_train.std())
 
 # Sigmoid function
@@ -168,8 +170,8 @@ initial_w = np.random.rand(X_train.shape[1])-0.5
 initial_b = 1.
 
 # Some gradient descent settings
-iterations = 10
-alpha = 0.3
+iterations = 1000
+alpha = 0.1
 
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
