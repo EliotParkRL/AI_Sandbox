@@ -17,7 +17,7 @@ print("\n=== y_train (Hit Values) ===")
 y_df = pd.DataFrame(y_train, columns=["Hit"])
 print(y_df)
 
-def add_full_polynomial_features(df, feature_columns, degree=10):
+def add_full_polynomial_features(df, feature_columns, degree=5):
     """
     Expands the dataset by adding polynomial features up to the specified degree,
     including all possible combinations of the features raised to different powers.
@@ -46,11 +46,6 @@ poly = PolynomialFeatures(10)
 X_train = poly.fit_transform(X_train)
 X_train = np.array((X_train - X_train.mean()) / X_train.std())
 
-# Sigmoid function
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-# Cost computation function
 def compute_cost(X, y, w, b, lam):
     """
     Computes the cost over all examples
@@ -71,7 +66,7 @@ def compute_cost(X, y, w, b, lam):
         total_cost += cost**2
     for i in range(len(w)):
         regular_addition += w[i] ** 2
-    total_cost = total_cost / m
+    total_cost = total_cost / (2*m)
     regular_addition *= lam/(2 * m)
     total_cost += regular_addition
     return total_cost
@@ -170,8 +165,8 @@ initial_w = np.random.rand(X_train.shape[1])-0.5
 initial_b = 1.
 
 # Some gradient descent settings
-iterations = 100
-alpha = 0.001
+iterations = 500
+alpha = 0.03
 
 w,b, J_history,_ = gradient_descent(X_train, y_train, initial_w, initial_b,
                                     compute_cost, compute_gradient_logistic,
@@ -247,11 +242,13 @@ y_predictions = predict_values(X_train, w, b)  # Predicted values for X_train
 # Prepare data for scatter heatmap plotting
 X_train_df = pd.read_csv("datalinear.csv", usecols=["launch_speed", 'launch_angle']).fillna(0)
 X_train_df['Predicted Hit'] = y_predictions  # Add the predicted hit values
+y_train = pd.read_csv("datalinear.csv", usecols=["estimated_ba_using_speedangle"]).fillna(0)
 # X_train_df['Predicted Hit'] = X_train_df['Predicted Hit'].round(2)
 
 # Create a scatter plot with color based on 'Predicted Hit'
 plt.figure(figsize=(10, 8))
 sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'], c=X_train_df['Predicted Hit'], cmap='viridis', s = 10)
+# sc = plt.scatter(X_train_df['launch_speed'], X_train_df['launch_angle'], c=y_train['estimated_ba_using_speedangle'], cmap='viridis', s = 10)
 plt.colorbar(label='Color Value')
 
 # Titles and labels
